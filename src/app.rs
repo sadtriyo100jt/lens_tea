@@ -19,6 +19,7 @@ pub struct App {
     pub running: bool,
     pub window: Window,
     pub mode: Mode,
+    pub query: String,
 }
 
 impl Default for App {
@@ -27,6 +28,7 @@ impl Default for App {
             running: true,
             mode: Mode::Normal,
             window: Window::Search,
+            query: String::new(),
         }
     }
 }

@@ -1,8 +1,11 @@
 use ratatui::{
-    layout::{Alignment, Rect},
-    style::{Color, Style, Styled, Stylize},
-    text::{Span, Text},
-    widgets::{Block, BorderType, Borders, Paragraph},
+    layout::{Alignment, Margin, Rect},
+    style::{Color, Style},
+    text::{Line, Span},
+    widgets::{
+        Block, BorderType, Borders, List, Padding, Paragraph, Row, Scrollbar, ScrollbarOrientation,
+        ScrollbarState,
+    },
     Frame,
 };
 
@@ -31,49 +34,47 @@ impl Colors {
 }
 
 pub fn render(app: &mut App, frame: &mut Frame) {
-    let title = "Search";
-    let spans = vec![
-        Span::styled(&title[..1], Style::default().fg(Color::Red)),
-        Span::raw(&title[1..]),
-    ];
-
     let colors = Colors::new(&app.window);
+    let title = vec![
+        Span::styled("S", Style::default().fg(Color::Red)),
+        Span::raw("earch"),
+    ];
 
     frame.render_widget(
         Paragraph::new(Span::styled(
-            format!(">"),
-            Style::default().fg(Color::Red).bold(),
+            format!("> grep {}", app.query),
+            Style::default().fg(Color::White),
         ))
         .block(
             Block::default()
-                .title(spans)
+                .title(title)
                 .title_alignment(Alignment::Center)
                 .borders(Borders::ALL)
-                .border_type(BorderType::Rounded),
+                .border_type(BorderType::Rounded)
+                .padding(Padding::new(1, 0, 1, 0)),
         )
         .style(Style::default().fg(colors.search).bg(Color::Black))
         .alignment(Alignment::Left),
-        Rect::new(52, 0, frame.size().width - 53, 5),
+        Rect::new(17, 0, 100, 5),
     );
 
-    let title = "Options";
-    let spans = vec![
-        Span::styled(&title[..1], Style::default().fg(Color::Red)),
-        Span::raw(&title[1..]),
+    let title = vec![
+        Span::styled("O", Style::default().fg(Color::Red)),
+        Span::raw("ptions"),
     ];
 
     frame.render_widget(
-        Paragraph::new(format!("",))
+        Paragraph::new("")
             .block(
                 Block::default()
-                    .title(spans)
+                    .title(title)
                     .title_alignment(Alignment::Center)
                     .borders(Borders::ALL)
                     .border_type(BorderType::Rounded),
             )
             .style(Style::default().fg(colors.options).bg(Color::Black))
             .alignment(Alignment::Left),
-        Rect::new(1, 0, 50, frame.size().height),
+        Rect::new(1, 0, 15, frame.size().height),
     );
 
     frame.render_widget(
@@ -87,6 +88,20 @@ pub fn render(app: &mut App, frame: &mut Frame) {
             )
             .style(Style::default().fg(Color::Cyan).bg(Color::Black))
             .alignment(Alignment::Center),
-        Rect::new(52, 5, frame.size().width - 53, frame.size().height - 5),
+        Rect::new(17, 5, 100, frame.size().height - 5),
+    );
+
+    frame.render_widget(
+        Paragraph::new(format!("",))
+            .block(
+                Block::default()
+                    .title("Preview")
+                    .title_alignment(Alignment::Center)
+                    .borders(Borders::ALL)
+                    .border_type(BorderType::Rounded),
+            )
+            .style(Style::default().fg(Color::Cyan).bg(Color::Black))
+            .alignment(Alignment::Center),
+        Rect::new(118, 0, 91, frame.size().height),
     );
 }
