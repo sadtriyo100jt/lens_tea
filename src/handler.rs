@@ -27,6 +27,9 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         (KeyCode::Char('x'), Mode::Normal, Window::Search) => {
             if app.cursor_pos <= app.query.len() as u16 && app.query.len() > 0 {
                 app.query.remove(app.cursor_pos as usize);
+            }
+
+            if app.cursor_pos == app.query.len() as u16 {
                 app.cursor_pos -= 1;
             }
         }
