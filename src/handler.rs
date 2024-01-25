@@ -5,6 +5,12 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
     match (key_event.code, &app.mode, &app.window) {
+        (KeyCode::Char('D'), Mode::Normal, Window::Search) => {
+            if app.query.len() > 0 {
+                app.query.drain(app.cursor_pos as usize..app.query.len());
+                app.cursor_pos -= 1;
+            }
+        }
         (KeyCode::Char('I'), Mode::Normal, Window::Search) => {
             app.cursor_pos = 0;
             app.mode = Mode::Insert
