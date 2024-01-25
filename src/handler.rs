@@ -33,11 +33,10 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         (KeyCode::Char('x'), Mode::Normal, Window::Search) => {
             if app.cursor_pos <= app.query.len() as u16 && app.query.len() > 0 {
                 app.query.remove(app.cursor_pos as usize);
+                return Ok(());
             }
 
-            if app.cursor_pos == app.query.len() as u16 {
-                app.cursor_pos -= 1;
-            }
+            app.cursor_pos -= 1;
         }
         (KeyCode::Char(c), Mode::Insert, Window::Search) => {
             if app.cursor_pos > app.query.len() as u16 {
@@ -81,17 +80,23 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         _ => {}
     }
 
-    app.result = String::from_utf8_lossy(
-        &Command::new("rg")
-            .arg("-l")
-            .arg(app.query.iter().collect::<String>())
-            .output()
-            .unwrap()
-            .stdout,
-    )
-    .lines()
-    .map(|line| line.to_string())
-    .collect::<Vec<String>>();
+    if app.query.len() > 0 {
+        app.result = String::from_utf8_lossy(
+            &Command::new("rg")
+                .arg("-l")
+                .arg(app.query.iter().collect::<String>())
+                .output()
+                .unwrap()
+                .stdout,
+        )
+        .lines()
+        .map(|line| line.to_string())
+        .collect::<Vec<String>>();
+
+        return Ok(());
+    }
+
+    app.result = Vec::new();
 
     Ok(())
 }
