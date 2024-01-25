@@ -3,7 +3,7 @@ use ratatui::{
     layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
     text::Span,
-    widgets::{Block, BorderType, Borders, Padding, Paragraph},
+    widgets::{Block, BorderType, Borders, List, Padding, Paragraph},
     Frame,
 };
 use tui_textarea::{CursorMove, TextArea};
@@ -37,7 +37,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     text_area.set_block(
         Block::default()
             .borders(Borders::ALL)
-            .padding(Padding::new(8, 0, 1, 0)),
+            .padding(Padding::new(6, 0, 1, 0)),
     );
     text_area.insert_str(app.query.iter().collect::<String>());
     text_area.move_cursor(CursorMove::Jump(0, app.cursor_pos));
@@ -54,7 +54,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         Span::raw("earch"),
     ];
     frame.render_widget(
-        Paragraph::new(Span::styled("> grep", Style::default().fg(Color::White)))
+        Paragraph::new(Span::styled("> rg", Style::default().fg(Color::White)))
             .block(
                 Block::default()
                     .title(title)
@@ -88,7 +88,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     );
 
     frame.render_widget(
-        Paragraph::new(format!("",))
+        List::new(app.result.clone())
             .block(
                 Block::default()
                     .title("Results")
@@ -96,8 +96,8 @@ pub fn render(app: &mut App, frame: &mut Frame) {
                     .borders(Borders::ALL)
                     .border_type(BorderType::Rounded),
             )
-            .style(Style::default().fg(Color::Cyan).bg(Color::Black))
-            .alignment(Alignment::Center),
+            .style(Style::default().fg(Color::Cyan).bg(Color::Black)),
+        //.alignment(Alignment::Center),
         Rect::new(17, 5, 100, frame.size().height - 5),
     );
 

@@ -21,6 +21,7 @@ pub struct App {
     pub mode: Mode,
     pub query: Vec<char>,
     pub cursor_pos: u16,
+    pub result: Vec<String>,
 }
 
 impl Default for App {
@@ -31,6 +32,7 @@ impl Default for App {
             window: Window::Search,
             query: Vec::new(),
             cursor_pos: 0,
+            result: Vec::new(),
         }
     }
 }

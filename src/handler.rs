@@ -1,4 +1,4 @@
-use std::u16;
+use std::{process::Command, u16};
 
 use crate::app::{App, AppResult, Mode, Window};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -80,5 +80,18 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         (KeyCode::Char('q'), Mode::Normal, _) => app.quit(),
         _ => {}
     }
+
+    app.result = String::from_utf8_lossy(
+        &Command::new("rg")
+            .arg("-l")
+            .arg(app.query.iter().collect::<String>())
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .lines()
+    .map(|line| line.to_string())
+    .collect::<Vec<String>>();
+
     Ok(())
 }
