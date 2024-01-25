@@ -8,7 +8,6 @@ use std::io;
 
 fn main() -> AppResult<()> {
     let mut app = App::new();
-
     let backend = CrosstermBackend::new(io::stderr());
     let terminal = Terminal::new(backend)?;
     let events = EventHandler::new(250);

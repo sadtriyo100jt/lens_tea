@@ -1,15 +1,12 @@
+use crate::{app::App, app::Window};
 use ratatui::{
-    layout::{Alignment, Margin, Rect},
+    layout::{Alignment, Rect},
     style::{Color, Style},
-    text::{Line, Span},
-    widgets::{
-        Block, BorderType, Borders, List, Padding, Paragraph, Row, Scrollbar, ScrollbarOrientation,
-        ScrollbarState,
-    },
+    text::Span,
+    widgets::{Block, BorderType, Borders, Padding, Paragraph},
     Frame,
 };
-
-use crate::{app::App, app::Window};
+use tui_textarea::{CursorMove, TextArea};
 
 struct Colors {
     search: Color,
@@ -34,27 +31,35 @@ impl Colors {
 }
 
 pub fn render(app: &mut App, frame: &mut Frame) {
+    let mut text_area = TextArea::default();
+    text_area.set_cursor_line_style(Style::default());
+    text_area.set_style(Style::default().fg(Color::LightRed));
+    text_area.set_block(
+        Block::default()
+            .borders(Borders::ALL)
+            .padding(Padding::new(8, 0, 1, 0)),
+    );
+    text_area.insert_str(app.query.iter().collect::<String>());
+    text_area.move_cursor(CursorMove::Jump(0, app.cursor_pos));
+    frame.render_widget(text_area.widget(), Rect::new(17, 0, 100, 5));
+
     let colors = Colors::new(&app.window);
     let title = vec![
         Span::styled("S", Style::default().fg(Color::Red)),
         Span::raw("earch"),
     ];
-
     frame.render_widget(
-        Paragraph::new(Span::styled(
-            format!("> grep {}", app.query),
-            Style::default().fg(Color::White),
-        ))
-        .block(
-            Block::default()
-                .title(title)
-                .title_alignment(Alignment::Center)
-                .borders(Borders::ALL)
-                .border_type(BorderType::Rounded)
-                .padding(Padding::new(1, 0, 1, 0)),
-        )
-        .style(Style::default().fg(colors.search).bg(Color::Black))
-        .alignment(Alignment::Left),
+        Paragraph::new(Span::styled("> grep", Style::default().fg(Color::White)))
+            .block(
+                Block::default()
+                    .title(title)
+                    .title_alignment(Alignment::Center)
+                    .borders(Borders::ALL)
+                    .border_type(BorderType::Rounded)
+                    .padding(Padding::new(1, 0, 1, 0)),
+            )
+            .style(Style::default().fg(colors.search).bg(Color::Black))
+            .alignment(Alignment::Left),
         Rect::new(17, 0, 100, 5),
     );
 
