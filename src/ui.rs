@@ -1,7 +1,7 @@
 use crate::{app::App, app::Window};
 use ratatui::{
     layout::{Alignment, Rect},
-    style::{Color, Style},
+    style::{Color, Modifier, Style},
     text::Span,
     widgets::{Block, BorderType, Borders, Padding, Paragraph},
     Frame,
@@ -41,6 +41,11 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     );
     text_area.insert_str(app.query.iter().collect::<String>());
     text_area.move_cursor(CursorMove::Jump(0, app.cursor_pos));
+    text_area.set_cursor_style(
+        Style::default()
+            .fg(Color::LightBlue)
+            .add_modifier(Modifier::REVERSED),
+    );
     frame.render_widget(text_area.widget(), Rect::new(17, 0, 100, 5));
 
     let colors = Colors::new(&app.window);
