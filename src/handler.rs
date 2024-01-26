@@ -82,7 +82,6 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         app.result = String::from_utf8_lossy(
             &Command::new("rg")
                 .arg("-l")
-                .arg("-.")
                 .arg("--sort")
                 .arg("modified")
                 .arg(app.query.iter().collect::<String>())
@@ -93,12 +92,19 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         .map(|line| line.to_string())
         .collect::<Vec<String>>();
 
-        app.preview =
-            String::from_utf8_lossy(&Command::new("cat").arg(&app.result[0]).output()?.stdout)
-                .to_string();
+        app.preview = String::from_utf8_lossy(
+            &Command::new("cat")
+                .arg(&app.result.get(0).unwrap_or(&"".to_string()))
+                .output()?
+                .stdout,
+        )
+        .to_string();
 
         return Ok(());
     }
+
+    app.result = Vec::new();
+    app.preview = String::new();
 
     Ok(())
 }
