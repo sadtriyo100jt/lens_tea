@@ -37,16 +37,16 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     text_area.set_block(
         Block::default()
             .borders(Borders::ALL)
-            .padding(Padding::new(6, 0, 1, 0)),
+            .padding(Padding::new(3, 0, 1, 0)),
     );
     text_area.insert_str(app.query.iter().collect::<String>());
-    text_area.move_cursor(CursorMove::Jump(0, app.cursor_pos));
+    text_area.move_cursor(CursorMove::Jump(0, app.cursor_pos as u16));
     text_area.set_cursor_style(
         Style::default()
             .fg(Color::LightBlue)
             .add_modifier(Modifier::REVERSED),
     );
-    frame.render_widget(text_area.widget(), Rect::new(17, 0, 100, 5));
+    frame.render_widget(text_area.widget(), Rect::new(27, 0, 90, 5));
 
     let colors = Colors::new(&app.window);
     let title = vec![
@@ -54,7 +54,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         Span::raw("earch"),
     ];
     frame.render_widget(
-        Paragraph::new(Span::styled("> rg", Style::default().fg(Color::White)))
+        Paragraph::new(Span::styled(">", Style::default().fg(Color::Magenta)))
             .block(
                 Block::default()
                     .title(title)
@@ -65,7 +65,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
             )
             .style(Style::default().fg(colors.search).bg(Color::Black))
             .alignment(Alignment::Left),
-        Rect::new(17, 0, 100, 5),
+        Rect::new(27, 0, 90, 5),
     );
 
     let title = vec![
@@ -74,17 +74,22 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     ];
 
     frame.render_widget(
-        Paragraph::new("")
-            .block(
-                Block::default()
-                    .title(title)
-                    .title_alignment(Alignment::Center)
-                    .borders(Borders::ALL)
-                    .border_type(BorderType::Rounded),
-            )
-            .style(Style::default().fg(colors.options).bg(Color::Black))
-            .alignment(Alignment::Left),
-        Rect::new(1, 0, 15, frame.size().height),
+        List::new([
+            "- hidden files",
+            "- files without match",
+            "- case sensitive",
+            "- stop on nonmatch",
+        ])
+        .block(
+            Block::default()
+                .title(title)
+                .title_alignment(Alignment::Center)
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .padding(Padding::new(1, 0, 0, 0)),
+        )
+        .style(Style::default().fg(colors.options).bg(Color::Black)),
+        Rect::new(1, 0, 25, frame.size().height),
     );
 
     frame.render_widget(
@@ -97,12 +102,11 @@ pub fn render(app: &mut App, frame: &mut Frame) {
                     .border_type(BorderType::Rounded),
             )
             .style(Style::default().fg(Color::Cyan).bg(Color::Black)),
-        //.alignment(Alignment::Center),
-        Rect::new(17, 5, 100, frame.size().height - 5),
+        Rect::new(27, 5, 90, frame.size().height - 5),
     );
 
     frame.render_widget(
-        Paragraph::new(format!("",))
+        Paragraph::new(app.preview.clone())
             .block(
                 Block::default()
                     .title("Preview")
@@ -110,8 +114,8 @@ pub fn render(app: &mut App, frame: &mut Frame) {
                     .borders(Borders::ALL)
                     .border_type(BorderType::Rounded),
             )
-            .style(Style::default().fg(Color::Cyan).bg(Color::Black))
-            .alignment(Alignment::Center),
+            //.style(Style::default().fg(Color::Cyan).bg(Color::Black))
+            .alignment(Alignment::Left),
         Rect::new(118, 0, 91, frame.size().height),
     );
 }

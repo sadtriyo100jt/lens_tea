@@ -20,8 +20,9 @@ pub struct App {
     pub window: Window,
     pub mode: Mode,
     pub query: Vec<char>,
-    pub cursor_pos: u16,
+    pub cursor_pos: usize,
     pub result: Vec<String>,
+    pub preview: String,
 }
 
 impl Default for App {
@@ -33,6 +34,7 @@ impl Default for App {
             query: Vec::new(),
             cursor_pos: 0,
             result: Vec::new(),
+            preview: String::new(),
         }
     }
 }

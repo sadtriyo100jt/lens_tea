@@ -1,4 +1,4 @@
-use std::{process::Command, u16};
+use std::process::Command;
 
 use crate::app::{App, AppResult, Mode, Window};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -7,7 +7,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
     match (key_event.code, &app.mode, &app.window) {
         (KeyCode::Char('D'), Mode::Normal, Window::Search) => {
             if app.query.len() > 0 {
-                app.query.drain(app.cursor_pos as usize..app.query.len());
+                app.query.drain(app.cursor_pos..app.query.len());
                 app.cursor_pos -= 1;
             }
         }
@@ -16,7 +16,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             app.mode = Mode::Insert
         }
         (KeyCode::Char('A'), Mode::Normal, Window::Search) => {
-            app.cursor_pos = app.query.len() as u16;
+            app.cursor_pos = app.query.len();
             app.mode = Mode::Insert;
         }
         (KeyCode::Char('c') | KeyCode::Char('C'), _, _)
@@ -26,23 +26,21 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         }
         (KeyCode::Backspace, Mode::Insert, Window::Search) => {
             if app.cursor_pos > 0 {
-                app.query.remove(app.cursor_pos as usize - 1);
+                app.query.remove(app.cursor_pos - 1);
                 app.cursor_pos -= 1;
             }
         }
         (KeyCode::Char('x'), Mode::Normal, Window::Search) => {
-            if app.cursor_pos <= app.query.len() as u16 && app.query.len() > 0 {
-                app.query.remove(app.cursor_pos as usize);
-                return Ok(());
+            if app.cursor_pos <= app.query.len() && app.query.len() > 0 {
+                app.query.remove(app.cursor_pos);
             }
-
             app.cursor_pos -= 1;
         }
         (KeyCode::Char(c), Mode::Insert, Window::Search) => {
-            if app.cursor_pos > app.query.len() as u16 {
-                app.cursor_pos = app.query.len() as u16;
+            if app.cursor_pos > app.query.len() {
+                app.cursor_pos = app.query.len();
             }
-            app.query.insert(app.cursor_pos as usize, c);
+            app.query.insert(app.cursor_pos, c);
             app.cursor_pos += 1;
         }
         (KeyCode::Char('o') | KeyCode::Char('O'), Mode::Normal, Window::Search) => {
@@ -57,7 +55,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             }
         }
         (KeyCode::Char('l'), Mode::Normal, Window::Search) => {
-            if app.cursor_pos < app.query.len() as u16 - 1 {
+            if app.cursor_pos < app.query.len() - 1 {
                 app.cursor_pos += 1;
             }
         }
@@ -72,7 +70,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         }
         (KeyCode::Char('a'), Mode::Normal, Window::Search) => {
             app.mode = Mode::Insert;
-            if app.cursor_pos < app.query.len() as u16 {
+            if app.cursor_pos < app.query.len() {
                 app.cursor_pos += 1;
             }
         }
@@ -84,19 +82,23 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         app.result = String::from_utf8_lossy(
             &Command::new("rg")
                 .arg("-l")
+                .arg("-.")
+                .arg("--sort")
+                .arg("modified")
                 .arg(app.query.iter().collect::<String>())
-                .output()
-                .unwrap()
+                .output()?
                 .stdout,
         )
         .lines()
         .map(|line| line.to_string())
         .collect::<Vec<String>>();
 
+        app.preview =
+            String::from_utf8_lossy(&Command::new("cat").arg(&app.result[0]).output()?.stdout)
+                .to_string();
+
         return Ok(());
     }
-
-    app.result = Vec::new();
 
     Ok(())
 }
