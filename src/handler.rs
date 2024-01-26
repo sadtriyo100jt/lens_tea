@@ -5,6 +5,16 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
     match (key_event.code, &app.mode, &app.window) {
+        (KeyCode::Char('j'), Mode::Normal, Window::Options) => {
+            if app.options_scroll < 3 {
+                app.options_scroll += 1;
+            }
+        }
+        (KeyCode::Char('k'), Mode::Normal, Window::Options) => {
+            if app.options_scroll > 0 {
+                app.options_scroll -= 1;
+            }
+        }
         (KeyCode::Char('k'), Mode::Normal, Window::Search) => {
             if app.result_scroll > 0 {
                 app.result_scroll -= 1;

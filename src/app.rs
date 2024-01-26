@@ -24,6 +24,7 @@ pub struct App {
     pub result: Vec<String>,
     pub preview: String,
     pub result_scroll: usize,
+    pub options_scroll: usize,
 }
 
 impl Default for App {
@@ -37,6 +38,7 @@ impl Default for App {
             result: Vec::new(),
             preview: String::new(),
             result_scroll: 0,
+            options_scroll: 0,
         }
     }
 }

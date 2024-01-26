@@ -73,12 +73,15 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         Span::raw("ptions"),
     ];
 
-    frame.render_widget(
+    let mut list_state = ListState::default();
+    list_state.select(Some(app.options_scroll));
+
+    frame.render_stateful_widget(
         List::new([
-            "- hidden files",
-            "- files without match",
-            "- case sensitive",
-            "- stop on nonmatch",
+            "hidden files",
+            "files without match",
+            "case sensitive",
+            "stop on nonmatch",
         ])
         .block(
             Block::default()
@@ -88,8 +91,11 @@ pub fn render(app: &mut App, frame: &mut Frame) {
                 .border_type(BorderType::Rounded)
                 .padding(Padding::new(1, 0, 0, 0)),
         )
-        .style(Style::default().fg(colors.options).bg(Color::Black)),
+        .style(Style::default().fg(colors.options).bg(Color::Black))
+        .highlight_style(Style::default().add_modifier(Modifier::BOLD))
+        .highlight_symbol("> "),
         Rect::new(1, 0, 25, frame.size().height),
+        &mut list_state,
     );
 
     let mut list_state = ListState::default();
@@ -106,7 +112,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
             )
             .style(Style::default().fg(Color::Cyan).bg(Color::Black))
             .highlight_style(Style::default().add_modifier(Modifier::BOLD))
-            .highlight_symbol("> "),
+            .highlight_symbol(" > "),
         Rect::new(27, 5, 90, frame.size().height - 5),
         &mut list_state,
     );
