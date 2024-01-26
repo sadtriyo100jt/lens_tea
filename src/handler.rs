@@ -5,6 +5,16 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
     match (key_event.code, &app.mode, &app.window) {
+        (KeyCode::Char('k'), Mode::Normal, Window::Search) => {
+            if app.result_scroll > 0 {
+                app.result_scroll -= 1;
+            }
+        }
+        (KeyCode::Char('j'), Mode::Normal, Window::Search) => {
+            if app.result_scroll < app.result.len() - 1 {
+                app.result_scroll += 1;
+            }
+        }
         (KeyCode::Char('D'), Mode::Normal, Window::Search) => {
             if app.query.len() > 0 {
                 app.query.drain(app.cursor_pos..app.query.len());
@@ -34,7 +44,10 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             if app.cursor_pos <= app.query.len() && app.query.len() > 0 {
                 app.query.remove(app.cursor_pos);
             }
-            app.cursor_pos -= 1;
+
+            if app.cursor_pos > 0 {
+                app.cursor_pos -= 1;
+            }
         }
         (KeyCode::Char(c), Mode::Insert, Window::Search) => {
             if app.cursor_pos > app.query.len() {
@@ -42,6 +55,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             }
             app.query.insert(app.cursor_pos, c);
             app.cursor_pos += 1;
+            app.result_scroll = 0;
         }
         (KeyCode::Char('o') | KeyCode::Char('O'), Mode::Normal, Window::Search) => {
             app.window = Window::Options
@@ -94,7 +108,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
 
         app.preview = String::from_utf8_lossy(
             &Command::new("cat")
-                .arg(&app.result.get(0).unwrap_or(&"".to_string()))
+                .arg(&app.result.get(app.result_scroll).unwrap_or(&"".to_string()))
                 .output()?
                 .stdout,
         )

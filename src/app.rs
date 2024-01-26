@@ -23,6 +23,7 @@ pub struct App {
     pub cursor_pos: usize,
     pub result: Vec<String>,
     pub preview: String,
+    pub result_scroll: usize,
 }
 
 impl Default for App {
@@ -35,6 +36,7 @@ impl Default for App {
             cursor_pos: 0,
             result: Vec::new(),
             preview: String::new(),
+            result_scroll: 0,
         }
     }
 }

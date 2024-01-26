@@ -3,7 +3,7 @@ use ratatui::{
     layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
     text::Span,
-    widgets::{Block, BorderType, Borders, List, Padding, Paragraph},
+    widgets::{Block, BorderType, Borders, List, ListState, Padding, Paragraph},
     Frame,
 };
 use tui_textarea::{CursorMove, TextArea};
@@ -92,7 +92,10 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         Rect::new(1, 0, 25, frame.size().height),
     );
 
-    frame.render_widget(
+    let mut list_state = ListState::default();
+    list_state.select(Some(app.result_scroll));
+
+    frame.render_stateful_widget(
         List::new(app.result.clone())
             .block(
                 Block::default()
@@ -101,8 +104,11 @@ pub fn render(app: &mut App, frame: &mut Frame) {
                     .borders(Borders::ALL)
                     .border_type(BorderType::Rounded),
             )
-            .style(Style::default().fg(Color::Cyan).bg(Color::Black)),
+            .style(Style::default().fg(Color::Cyan).bg(Color::Black))
+            .highlight_style(Style::default().add_modifier(Modifier::BOLD))
+            .highlight_symbol("> "),
         Rect::new(27, 5, 90, frame.size().height - 5),
+        &mut list_state,
     );
 
     frame.render_widget(
@@ -114,7 +120,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
                     .borders(Borders::ALL)
                     .border_type(BorderType::Rounded),
             )
-            //.style(Style::default().fg(Color::Cyan).bg(Color::Black))
+            .style(Style::default().fg(Color::Cyan).bg(Color::Black))
             .alignment(Alignment::Left),
         Rect::new(118, 0, 91, frame.size().height),
     );
