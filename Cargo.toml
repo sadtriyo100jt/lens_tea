@@ -6,6 +6,7 @@ license = "MIT"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.79"
 crossterm = "0.27.0"
 ratatui = "0.25.0"
 tui-textarea = "0.4.0"

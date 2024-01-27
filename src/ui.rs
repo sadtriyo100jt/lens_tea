@@ -118,7 +118,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     );
 
     frame.render_widget(
-        Paragraph::new(app.preview.clone())
+        Paragraph::new(&*app.preview)
             .block(
                 Block::default()
                     .title("Preview")

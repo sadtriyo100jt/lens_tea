@@ -3,27 +3,26 @@ use std::process::Command;
 use crate::app::{App, AppResult, Mode, Window};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
+fn scroll(scroll: &mut usize, direction: i32, limit: usize) {
+    let new_scroll = (*scroll as i32) + direction;
+    if new_scroll >= 0 && new_scroll < limit as i32 {
+        *scroll = new_scroll as usize;
+    }
+}
+
 pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
     match (key_event.code, &app.mode, &app.window) {
         (KeyCode::Char('j'), Mode::Normal, Window::Options) => {
-            if app.options_scroll < 3 {
-                app.options_scroll += 1;
-            }
+            scroll(&mut app.options_scroll, 1, 4)
         }
         (KeyCode::Char('k'), Mode::Normal, Window::Options) => {
-            if app.options_scroll > 0 {
-                app.options_scroll -= 1;
-            }
+            scroll(&mut app.options_scroll, -1, 4)
         }
         (KeyCode::Char('k'), Mode::Normal, Window::Search) => {
-            if app.result_scroll > 0 {
-                app.result_scroll -= 1;
-            }
+            scroll(&mut app.result_scroll, -1, app.result.len())
         }
         (KeyCode::Char('j'), Mode::Normal, Window::Search) => {
-            if app.result_scroll < app.result.len() - 1 {
-                app.result_scroll += 1;
-            }
+            scroll(&mut app.result_scroll, 1, app.result.len())
         }
         (KeyCode::Char('D'), Mode::Normal, Window::Search) => {
             if app.query.len() > 0 {
@@ -49,6 +48,8 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
                 app.query.remove(app.cursor_pos - 1);
                 app.cursor_pos -= 1;
             }
+
+            get_stuff(app)?;
         }
         (KeyCode::Char('x'), Mode::Normal, Window::Search) => {
             if app.cursor_pos <= app.query.len() && app.query.len() > 0 {
@@ -58,6 +59,8 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             if app.cursor_pos > 0 {
                 app.cursor_pos -= 1;
             }
+
+            get_stuff(app)?;
         }
         (KeyCode::Char(c), Mode::Insert, Window::Search) => {
             if app.cursor_pos > app.query.len() {
@@ -66,6 +69,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             app.query.insert(app.cursor_pos, c);
             app.cursor_pos += 1;
             app.result_scroll = 0;
+            get_stuff(app)?;
         }
         (KeyCode::Char('o') | KeyCode::Char('O'), Mode::Normal, Window::Search) => {
             app.window = Window::Options
@@ -102,12 +106,19 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         _ => {}
     }
 
+    Ok(())
+}
+
+fn get_stuff(app: &mut App) -> anyhow::Result<()> {
     if app.query.len() > 0 {
         app.result = String::from_utf8_lossy(
             &Command::new("rg")
-                .arg("-l")
-                .arg("--sort")
-                .arg("modified")
+                .arg("--color=never")
+                .arg("--no-heading")
+                .arg("--with-filename")
+                .arg("--line-number")
+                .arg("--column")
+                .arg("--smart-case")
                 .arg(app.query.iter().collect::<String>())
                 .output()?
                 .stdout,
@@ -129,6 +140,5 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
 
     app.result = Vec::new();
     app.preview = String::new();
-
     Ok(())
 }
