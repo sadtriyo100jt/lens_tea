@@ -1,4 +1,4 @@
-use std::process::Command;
+use std::{env, process::Command};
 
 use crate::app::{App, AppResult, Mode, Window};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -10,8 +10,46 @@ fn scroll(scroll: &mut usize, direction: i32, limit: usize) {
     }
 }
 
+fn open_editor(app: &mut App) -> anyhow::Result<()> {
+    let editor = env::var("EDITOR")?;
+    let result = app
+        .result
+        .get(app.result_scroll)
+        .unwrap()
+        .split(":")
+        .collect::<Vec<&str>>();
+
+    let (line, column) = (result[1], result[2]);
+    let command = match editor.as_ref() {
+        "vim" | "nvim" => format!("+normal {}G{}|", line, column),
+        "emacs" => format!("+{}:{}", line, column),
+        _ => format!(""),
+    };
+    Command::new(editor)
+        .arg(command)
+        .arg(
+            &app.result
+                .get(app.result_scroll)
+                .unwrap()
+                .split_once(":")
+                .unwrap()
+                .0,
+        )
+        .status()?;
+    app.running = false;
+
+    Ok(())
+}
+
 pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
     match (key_event.code, &app.mode, &app.window) {
+        (KeyCode::Char('g'), Mode::Normal, Window::Search) => {
+            app.result_scroll = 0;
+        }
+        (KeyCode::Char('G'), Mode::Normal, Window::Search) => {
+            app.result_scroll = app.result.len() - 1;
+        }
+        (KeyCode::Char('e'), Mode::Normal, Window::Search) => open_editor(app).unwrap(),
         (KeyCode::Char('j'), Mode::Normal, Window::Options) => {
             scroll(&mut app.options_scroll, 1, 4)
         }
