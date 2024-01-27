@@ -49,7 +49,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
                 app.cursor_pos -= 1;
             }
 
-            get_stuff(app)?;
+            get_results(app)?;
         }
         (KeyCode::Char('x'), Mode::Normal, Window::Search) => {
             if app.cursor_pos <= app.query.len() && app.query.len() > 0 {
@@ -59,8 +59,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             if app.cursor_pos > 0 {
                 app.cursor_pos -= 1;
             }
-
-            get_stuff(app)?;
+            get_results(app)?;
         }
         (KeyCode::Char(c), Mode::Insert, Window::Search) => {
             if app.cursor_pos > app.query.len() {
@@ -69,7 +68,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             app.query.insert(app.cursor_pos, c);
             app.cursor_pos += 1;
             app.result_scroll = 0;
-            get_stuff(app)?;
+            get_results(app)?;
         }
         (KeyCode::Char('o') | KeyCode::Char('O'), Mode::Normal, Window::Search) => {
             app.window = Window::Options
@@ -106,10 +105,30 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         _ => {}
     }
 
+    if app.query.len() > 0 {
+        app.preview = String::from_utf8_lossy(
+            &Command::new("cat")
+                .arg(
+                    &app.result
+                        .get(app.result_scroll)
+                        .unwrap_or(&":".to_string())
+                        .split_once(":")
+                        .unwrap()
+                        .0,
+                )
+                .output()?
+                .stdout,
+        )
+        .to_string();
+        return Ok(());
+    }
+
+    app.preview = String::new();
+
     Ok(())
 }
 
-fn get_stuff(app: &mut App) -> anyhow::Result<()> {
+fn get_results(app: &mut App) -> anyhow::Result<()> {
     if app.query.len() > 0 {
         app.result = String::from_utf8_lossy(
             &Command::new("rg")
@@ -127,18 +146,9 @@ fn get_stuff(app: &mut App) -> anyhow::Result<()> {
         .map(|line| line.to_string())
         .collect::<Vec<String>>();
 
-        app.preview = String::from_utf8_lossy(
-            &Command::new("cat")
-                .arg(&app.result.get(app.result_scroll).unwrap_or(&"".to_string()))
-                .output()?
-                .stdout,
-        )
-        .to_string();
-
         return Ok(());
     }
 
     app.result = Vec::new();
-    app.preview = String::new();
     Ok(())
 }
