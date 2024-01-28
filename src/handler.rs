@@ -1,6 +1,12 @@
 use crate::app::{App, AppResult, Mode, Window};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use std::{env, process::Command};
+use std::{
+    env,
+    fs::File,
+    io::{self, BufRead},
+    path::Path,
+    process::Command,
+};
 
 fn scroll(scroll: &mut usize, direction: i32, limit: usize) {
     let new_scroll = (*scroll as i32) + direction;
@@ -42,6 +48,35 @@ fn open_editor(app: &mut App) -> anyhow::Result<()> {
 
 pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
     match (key_event.code, &app.mode, &app.window) {
+        // This has to be checked first
+        (KeyCode::Char('c') | KeyCode::Char('C'), _, _)
+            if key_event.modifiers == KeyModifiers::CONTROL =>
+        {
+            app.quit();
+        }
+        (KeyCode::Char(c), Mode::Insert, Window::Search) => {
+            if app.cursor_pos > app.query.len() {
+                app.cursor_pos = app.query.len();
+            }
+            app.query.insert(app.cursor_pos, c);
+            app.cursor_pos += 1;
+            app.result_scroll = 0;
+            get_results(app)?;
+        }
+        (KeyCode::Backspace, Mode::Insert, Window::Search) => {
+            if app.cursor_pos > 0 {
+                app.query.remove(app.cursor_pos - 1);
+                app.cursor_pos -= 1;
+            }
+
+            get_results(app)?;
+        }
+        (KeyCode::Esc, Mode::Insert, Window::Search) => {
+            app.mode = Mode::Normal;
+            if app.cursor_pos > 0 {
+                app.cursor_pos -= 1
+            }
+        }
         (KeyCode::Char('g'), Mode::Normal, Window::Search) => {
             app.result_scroll = 0;
         }
@@ -77,19 +112,6 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             app.cursor_pos = app.query.len();
             app.mode = Mode::Insert;
         }
-        (KeyCode::Char('c') | KeyCode::Char('C'), _, _)
-            if key_event.modifiers == KeyModifiers::CONTROL =>
-        {
-            app.quit();
-        }
-        (KeyCode::Backspace, Mode::Insert, Window::Search) => {
-            if app.cursor_pos > 0 {
-                app.query.remove(app.cursor_pos - 1);
-                app.cursor_pos -= 1;
-            }
-
-            get_results(app)?;
-        }
         (KeyCode::Char('x'), Mode::Normal, Window::Search) => {
             if app.cursor_pos <= app.query.len() && app.query.len() > 0 {
                 app.query.remove(app.cursor_pos);
@@ -98,15 +120,6 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             if app.cursor_pos > 0 {
                 app.cursor_pos -= 1;
             }
-            get_results(app)?;
-        }
-        (KeyCode::Char(c), Mode::Insert, Window::Search) => {
-            if app.cursor_pos > app.query.len() {
-                app.cursor_pos = app.query.len();
-            }
-            app.query.insert(app.cursor_pos, c);
-            app.cursor_pos += 1;
-            app.result_scroll = 0;
             get_results(app)?;
         }
         (KeyCode::Char('o') | KeyCode::Char('O'), Mode::Normal, Window::Search) => {
@@ -125,12 +138,6 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
                 app.cursor_pos += 1;
             }
         }
-        (KeyCode::Esc, Mode::Insert, Window::Search) => {
-            app.mode = Mode::Normal;
-            if app.cursor_pos > 0 {
-                app.cursor_pos -= 1
-            }
-        }
         (KeyCode::Char('i'), Mode::Normal, Window::Search) => {
             app.mode = Mode::Insert;
         }
@@ -144,35 +151,37 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         _ => {}
     }
 
-    if app.query.len() > 0 {
-        app.preview = String::from_utf8_lossy(
-            &Command::new("rg")
-                .arg("-m")
-                .arg("1")
-                .arg("-C")
-                .arg("50")
-                .arg("-F")
-                .arg(
-                    &app.result
-                        .get(app.result_scroll)
-                        .unwrap_or(&":".to_string())
-                        .split(":")
-                        .collect::<Vec<&str>>()
-                        .get(3)
-                        .unwrap_or(&""),
-                )
-                .arg(
-                    &app.result
-                        .get(app.result_scroll)
-                        .unwrap_or(&":".to_string())
-                        .split_once(":")
-                        .unwrap()
-                        .0,
-                )
-                .output()?
-                .stdout,
-        )
-        .to_string();
+    let file = File::open(Path::new(
+        &app.result
+            .get(app.result_scroll)
+            .unwrap_or(&":".to_string())
+            .split_once(":")
+            .unwrap()
+            .0,
+    ));
+
+    if let Ok(file) = file {
+        let reader = io::BufReader::new(file);
+
+        let x = &app
+            .result
+            .get(app.result_scroll)
+            .unwrap_or(&":".to_string())
+            .split(":")
+            .collect::<Vec<&str>>()[1]
+            .parse::<usize>()?;
+
+        let start = if *x > 25_usize { *x - 25 } else { 0 };
+        let end = start + 50;
+
+        app.preview = reader
+            .lines()
+            .enumerate()
+            .skip(start)
+            .take_while(|&(index, _)| index + 1 <= end)
+            .map(|(_, line)| line.unwrap())
+            .collect::<Vec<String>>()
+            .join("\n");
         return Ok(());
     }
 

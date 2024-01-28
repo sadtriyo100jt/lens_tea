@@ -3,7 +3,7 @@ use ratatui::{
     layout::Alignment,
     style::{Color, Modifier, Style},
     text::Span,
-    widgets::{Block, BorderType, Borders, List, Padding, Paragraph},
+    widgets::{Block, BorderType, Borders, List, ListItem, Padding, Paragraph},
 };
 use tui_textarea::{CursorMove, TextArea};
 
@@ -72,7 +72,13 @@ pub fn options(color: Color) -> List<'static> {
 }
 
 pub fn results(app: &mut App) -> List<'static> {
-    List::new(app.result.clone())
+    let items = app
+        .result
+        .iter()
+        .map(|item| ListItem::new(item.clone()).style(Style::default().fg(Color::White)))
+        .collect::<Vec<_>>();
+
+    List::new(items)
         .block(
             Block::default()
                 .title("Results")
@@ -81,7 +87,11 @@ pub fn results(app: &mut App) -> List<'static> {
                 .border_type(BorderType::Rounded),
         )
         .style(Style::default().fg(Color::Cyan).bg(Color::Black))
-        .highlight_style(Style::default().add_modifier(Modifier::BOLD))
+        .highlight_style(
+            Style::default()
+                .add_modifier(Modifier::BOLD)
+                .fg(Color::Yellow),
+        )
         .highlight_symbol(" > ")
 }
 
