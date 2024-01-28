@@ -1,7 +1,6 @@
-use std::{env, process::Command};
-
 use crate::app::{App, AppResult, Mode, Window};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use std::{env, process::Command};
 
 fn scroll(scroll: &mut usize, direction: i32, limit: usize) {
     let new_scroll = (*scroll as i32) + direction;
@@ -10,8 +9,9 @@ fn scroll(scroll: &mut usize, direction: i32, limit: usize) {
     }
 }
 
+/*
 fn open_editor(app: &mut App) -> anyhow::Result<()> {
-    let editor = env::var("EDITOR")?;
+    let editor = "nvim"; //env::var("EDITOR")?;
     let result = app
         .result
         .get(app.result_scroll)
@@ -35,11 +35,12 @@ fn open_editor(app: &mut App) -> anyhow::Result<()> {
                 .unwrap()
                 .0,
         )
-        .status()?;
-    app.running = false;
+        .spawn()?
+        .wait()?;
 
     Ok(())
 }
+*/
 
 pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
     match (key_event.code, &app.mode, &app.window) {
@@ -49,7 +50,9 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         (KeyCode::Char('G'), Mode::Normal, Window::Search) => {
             app.result_scroll = app.result.len() - 1;
         }
-        (KeyCode::Char('e'), Mode::Normal, Window::Search) => open_editor(app).unwrap(),
+        (KeyCode::Char('e'), Mode::Normal, Window::Search) => {
+            //open_editor(app)?;
+        }
         (KeyCode::Char('j'), Mode::Normal, Window::Options) => {
             scroll(&mut app.options_scroll, 1, 4)
         }
