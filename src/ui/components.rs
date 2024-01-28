@@ -2,7 +2,7 @@ use crate::app::App;
 use ratatui::{
     layout::Alignment,
     style::{Color, Modifier, Style},
-    text::Span,
+    text::{Span, Text},
     widgets::{Block, BorderType, Borders, List, ListItem, Padding, Paragraph},
 };
 use tui_textarea::{CursorMove, TextArea};
@@ -71,11 +71,13 @@ pub fn options(color: Color) -> List<'static> {
     .highlight_symbol("> ")
 }
 
-pub fn results(app: &mut App) -> List<'static> {
+pub fn results<'a>(app: &'a mut App) -> List<'a> {
     let items = app
         .result
         .iter()
-        .map(|item| ListItem::new(item.clone()).style(Style::default().fg(Color::White)))
+        .map(|item| {
+            ListItem::new(Text::from(Span::from(item))).style(Style::default().fg(Color::White))
+        })
         .collect::<Vec<_>>();
 
     List::new(items)
@@ -96,14 +98,17 @@ pub fn results(app: &mut App) -> List<'static> {
 }
 
 pub fn preview(app: &mut App) -> Paragraph {
-    Paragraph::new(&*app.preview)
-        .block(
-            Block::default()
-                .title("Preview")
-                .title_alignment(Alignment::Center)
-                .borders(Borders::ALL)
-                .border_type(BorderType::Rounded),
-        )
-        .style(Style::default().fg(Color::Cyan).bg(Color::Black))
-        .alignment(Alignment::Left)
+    Paragraph::new(Text::styled(
+        &*app.preview,
+        Style::default().fg(Color::White),
+    ))
+    .block(
+        Block::default()
+            .title("Preview")
+            .title_alignment(Alignment::Center)
+            .borders(Borders::ALL)
+            .border_type(BorderType::Rounded),
+    )
+    .style(Style::default().fg(Color::Cyan).bg(Color::Black))
+    .alignment(Alignment::Left)
 }
