@@ -1,8 +1,8 @@
 use crate::app::App;
 use ratatui::{
     layout::Alignment,
-    style::{Color, Modifier, Style},
-    text::{Span, Text},
+    style::{Color, Modifier, Style, Stylize},
+    text::Span,
     widgets::{Block, BorderType, Borders, List, ListItem, Padding, Paragraph},
 };
 use tui_textarea::{CursorMove, TextArea};
@@ -52,32 +52,25 @@ pub fn options(color: Color) -> List<'static> {
         Span::raw("ptions"),
     ];
 
-    List::new([
-        "hidden files",
-        "files without match",
-        "case sensitive",
-        "stop on nonmatch",
-    ])
-    .block(
-        Block::default()
-            .title(title)
-            .title_alignment(Alignment::Center)
-            .borders(Borders::ALL)
-            .border_type(BorderType::Rounded)
-            .padding(Padding::new(1, 0, 0, 0)),
-    )
-    .style(Style::default().fg(color).bg(Color::Black))
-    .highlight_style(Style::default().add_modifier(Modifier::BOLD))
-    .highlight_symbol("> ")
+    List::new(["hidden files"])
+        .block(
+            Block::default()
+                .title(title)
+                .title_alignment(Alignment::Center)
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .padding(Padding::new(1, 0, 0, 0)),
+        )
+        .style(Style::default().fg(color).bg(Color::Black))
+        .highlight_style(Style::default().add_modifier(Modifier::BOLD))
+        .highlight_symbol("> ")
 }
 
 pub fn results<'a>(app: &'a mut App) -> List<'a> {
     let items = app
         .result
         .iter()
-        .map(|item| {
-            ListItem::new(Text::from(Span::from(item))).style(Style::default().fg(Color::White))
-        })
+        .map(|item| ListItem::new(Span::from(item)).style(Style::default().fg(Color::White)))
         .collect::<Vec<_>>();
 
     List::new(items)
@@ -97,11 +90,15 @@ pub fn results<'a>(app: &'a mut App) -> List<'a> {
         .highlight_symbol(" > ")
 }
 
-pub fn preview(app: &mut App) -> Paragraph {
-    Paragraph::new(Text::styled(
-        &*app.preview,
-        Style::default().fg(Color::White),
-    ))
+pub fn preview<'a>(app: &'a mut App) -> List<'a> {
+    List::new(app.preview.lines().enumerate().map(|(index, line)| {
+        let item = ListItem::new(Span::from(line).style(Style::default().fg(Color::White)));
+        if index + 1 == app.searched_line {
+            return item.add_modifier(Modifier::REVERSED);
+        }
+
+        item
+    }))
     .block(
         Block::default()
             .title("Preview")
@@ -110,5 +107,4 @@ pub fn preview(app: &mut App) -> Paragraph {
             .border_type(BorderType::Rounded),
     )
     .style(Style::default().fg(Color::Cyan).bg(Color::Black))
-    .alignment(Alignment::Left)
 }

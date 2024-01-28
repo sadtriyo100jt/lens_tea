@@ -96,6 +96,7 @@ pub fn get_preview(app: &mut App) -> anyhow::Result<()> {
 
         let start = if *x > 25_usize { *x - 25 } else { 0 };
         let end = start + 50;
+        app.searched_line = *x - start;
 
         app.preview = reader
             .lines()

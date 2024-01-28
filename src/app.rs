@@ -26,6 +26,7 @@ pub struct App {
     pub result_scroll: usize,
     pub options_scroll: usize,
     pub args: Vec<String>,
+    pub searched_line: usize,
 }
 
 impl Default for App {
@@ -41,6 +42,7 @@ impl Default for App {
             result_scroll: 0,
             options_scroll: 0,
             args: Vec::new(),
+            searched_line: 0,
         }
     }
 }
