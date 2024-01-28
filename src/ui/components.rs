@@ -14,7 +14,7 @@ pub fn text_area(app: &mut App) -> TextArea {
     text_area.set_block(
         Block::default()
             .borders(Borders::ALL)
-            .padding(Padding::new(3, 0, 1, 0)),
+            .padding(Padding::new(3, 0, 0, 0)),
     );
     text_area.insert_str(app.query.iter().collect::<String>());
     text_area.move_cursor(CursorMove::Jump(0, app.cursor_pos as u16));
@@ -40,7 +40,7 @@ pub fn search(color: Color) -> Paragraph<'static> {
                 .title_alignment(Alignment::Center)
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded)
-                .padding(Padding::new(1, 0, 1, 0)),
+                .padding(Padding::new(1, 0, 0, 0)),
         )
         .style(Style::default().fg(color).bg(Color::Black))
         .alignment(Alignment::Left)
@@ -72,28 +72,28 @@ pub fn options(color: Color) -> List<'static> {
 }
 
 pub fn results(app: &mut App) -> List<'static> {
-List::new(app.result.clone())
-            .block(
-                Block::default()
-                    .title("Results")
-                    .title_alignment(Alignment::Center)
-                    .borders(Borders::ALL)
-                    .border_type(BorderType::Rounded),
-            )
-            .style(Style::default().fg(Color::Cyan).bg(Color::Black))
-            .highlight_style(Style::default().add_modifier(Modifier::BOLD))
-            .highlight_symbol(" > ")
+    List::new(app.result.clone())
+        .block(
+            Block::default()
+                .title("Results")
+                .title_alignment(Alignment::Center)
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded),
+        )
+        .style(Style::default().fg(Color::Cyan).bg(Color::Black))
+        .highlight_style(Style::default().add_modifier(Modifier::BOLD))
+        .highlight_symbol(" > ")
 }
 
 pub fn preview(app: &mut App) -> Paragraph {
-Paragraph::new(&*app.preview)
-            .block(
-                Block::default()
-                    .title("Preview")
-                    .title_alignment(Alignment::Center)
-                    .borders(Borders::ALL)
-                    .border_type(BorderType::Rounded),
-            )
-            .style(Style::default().fg(Color::Cyan).bg(Color::Black))
-            .alignment(Alignment::Left)
+    Paragraph::new(&*app.preview)
+        .block(
+            Block::default()
+                .title("Preview")
+                .title_alignment(Alignment::Center)
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded),
+        )
+        .style(Style::default().fg(Color::Cyan).bg(Color::Black))
+        .alignment(Alignment::Left)
 }

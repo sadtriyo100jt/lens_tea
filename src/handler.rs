@@ -1,6 +1,6 @@
 use crate::app::{App, AppResult, Mode, Window};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use std::{env, process::Command};
+use std::process::Command;
 
 fn scroll(scroll: &mut usize, direction: i32, limit: usize) {
     let new_scroll = (*scroll as i32) + direction;
