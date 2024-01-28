@@ -3,7 +3,7 @@ mod components;
 use crate::{app::App, app::Window};
 use components::{options, preview, results, search, text_area};
 use ratatui::{
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::{Constraint, Direction, Layout},
     style::Color,
     widgets::ListState,
     Frame,
@@ -56,9 +56,9 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         ])
         .split(columns[1]);
 
-    frame.render_widget(text_area(app).widget(), rows[0]);
-    frame.render_widget(search(colors.search), rows[0]);
     frame.render_stateful_widget(options(colors.options), columns[0], &mut options_state);
     frame.render_stateful_widget(results(app), rows[1], &mut result_state);
+    frame.render_widget(text_area(app).widget(), rows[0]);
+    frame.render_widget(search(colors.search), rows[0]);
     frame.render_widget(preview(app), columns[2]);
 }

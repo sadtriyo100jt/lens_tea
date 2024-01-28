@@ -1,6 +1,6 @@
 use crate::app::{App, AppResult, Mode, Window};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use std::process::Command;
+use std::{env, process::Command};
 
 fn scroll(scroll: &mut usize, direction: i32, limit: usize) {
     let new_scroll = (*scroll as i32) + direction;
@@ -9,9 +9,8 @@ fn scroll(scroll: &mut usize, direction: i32, limit: usize) {
     }
 }
 
-/*
 fn open_editor(app: &mut App) -> anyhow::Result<()> {
-    let editor = "nvim"; //env::var("EDITOR")?;
+    let editor = env::var("EDITOR")?;
     let result = app
         .result
         .get(app.result_scroll)
@@ -40,7 +39,6 @@ fn open_editor(app: &mut App) -> anyhow::Result<()> {
 
     Ok(())
 }
-*/
 
 pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
     match (key_event.code, &app.mode, &app.window) {
@@ -51,7 +49,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             app.result_scroll = app.result.len() - 1;
         }
         (KeyCode::Char('e'), Mode::Normal, Window::Search) => {
-            //open_editor(app)?;
+            open_editor(app)?;
         }
         (KeyCode::Char('j'), Mode::Normal, Window::Options) => {
             scroll(&mut app.options_scroll, 1, 4)
@@ -148,7 +146,19 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
 
     if app.query.len() > 0 {
         app.preview = String::from_utf8_lossy(
-            &Command::new("cat")
+            &Command::new("rg")
+                .arg("-m")
+                .arg("1")
+                .arg("-C")
+                .arg("50")
+                .arg("-F")
+                .arg(
+                    &app.result
+                        .get(app.result_scroll)
+                        .unwrap_or(&":".to_string())
+                        .split(":")
+                        .collect::<Vec<&str>>()[3],
+                )
                 .arg(
                     &app.result
                         .get(app.result_scroll)
