@@ -157,7 +157,9 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
                         .get(app.result_scroll)
                         .unwrap_or(&":".to_string())
                         .split(":")
-                        .collect::<Vec<&str>>()[3],
+                        .collect::<Vec<&str>>()
+                        .get(3)
+                        .unwrap_or(&""),
                 )
                 .arg(
                     &app.result
