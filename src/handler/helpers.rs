@@ -1,4 +1,7 @@
+use ratatui::backend::CrosstermBackend;
+
 use crate::app::App;
+use crate::tui::Tui;
 use std::{env, process::Command};
 use std::{
     fs::File,
@@ -6,7 +9,10 @@ use std::{
     path::Path,
 };
 
-pub fn open_editor(app: &mut App) -> anyhow::Result<()> {
+pub fn open_editor(
+    app: &mut App,
+    tui: &mut Tui<CrosstermBackend<io::Stderr>>,
+) -> anyhow::Result<()> {
     let editor = match env::var("EDITOR") {
         Ok(editor) => editor,
         Err(_) => return Ok(()),
@@ -24,11 +30,14 @@ pub fn open_editor(app: &mut App) -> anyhow::Result<()> {
         "emacs" => format!("+{}:{}", line, column),
         _ => format!(""),
     };
+
+    let _ = tui.pause();
     Command::new(editor)
         .arg(command)
         .arg(result[0])
         .spawn()?
         .wait()?;
+    let _ = tui.resume();
 
     Ok(())
 }

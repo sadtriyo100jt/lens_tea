@@ -12,11 +12,16 @@ use std::panic;
 pub struct Tui<B: Backend> {
     pub terminal: Terminal<B>,
     pub events: EventHandler,
+    pub paused: bool,
 }
 
 impl<B: Backend> Tui<B> {
     pub fn new(terminal: Terminal<B>, events: EventHandler) -> Self {
-        Self { terminal, events }
+        Self {
+            terminal,
+            events,
+            paused: false,
+        }
     }
 
     pub fn init(&mut self) -> AppResult<()> {
@@ -36,6 +41,21 @@ impl<B: Backend> Tui<B> {
 
     pub fn draw(&mut self, app: &mut App) -> AppResult<()> {
         self.terminal.draw(|frame| ui::render(app, frame))?;
+        Ok(())
+    }
+
+    pub fn pause(&mut self) -> AppResult<()> {
+        terminal::disable_raw_mode()?;
+        crossterm::execute!(io::stderr(), LeaveAlternateScreen)?;
+        self.events.pause();
+        Ok(())
+    }
+
+    pub fn resume(&mut self) -> AppResult<()> {
+        terminal::enable_raw_mode()?;
+        crossterm::execute!(io::stderr(), EnterAlternateScreen)?;
+        self.events.resume();
+        self.terminal.clear()?;
         Ok(())
     }
 

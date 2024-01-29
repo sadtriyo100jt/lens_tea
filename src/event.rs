@@ -1,44 +1,42 @@
 use crate::app::AppResult;
 use crossterm::event::{self, Event as CrosstermEvent, KeyEvent, MouseEvent};
-use std::sync::mpsc;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{mpsc, Arc};
 use std::thread;
 use std::time::{Duration, Instant};
 
-/// Terminal events.
 #[derive(Clone, Copy, Debug)]
 pub enum Event {
-    /// Terminal tick.
     Tick,
-    /// Key press.
     Key(KeyEvent),
-    /// Mouse click/scroll.
     Mouse(MouseEvent),
-    /// Terminal resize.
     Resize(u16, u16),
 }
 
-/// Terminal event handler.
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct EventHandler {
-    /// Event sender channel.
     sender: mpsc::Sender<Event>,
-    /// Event receiver channel.
     receiver: mpsc::Receiver<Event>,
-    /// Event handler thread.
     handler: thread::JoinHandle<()>,
+    pub running: Arc<AtomicBool>,
 }
 
 impl EventHandler {
-    /// Constructs a new instance of [`EventHandler`].
     pub fn new(tick_rate: u64) -> Self {
         let tick_rate = Duration::from_millis(tick_rate);
         let (sender, receiver) = mpsc::channel();
+        let running = Arc::new(AtomicBool::new(true));
         let handler = {
             let sender = sender.clone();
+            let running = running.clone();
             thread::spawn(move || {
                 let mut last_tick = Instant::now();
                 loop {
+                    if !running.load(Ordering::Relaxed) {
+                        thread::sleep(Duration::from_millis(100));
+                        continue;
+                    }
                     let timeout = tick_rate
                         .checked_sub(last_tick.elapsed())
                         .unwrap_or(tick_rate);
@@ -66,14 +64,20 @@ impl EventHandler {
             sender,
             receiver,
             handler,
+            running,
         }
     }
 
-    /// Receive the next event from the handler thread.
-    ///
-    /// This function will always block the current thread if
-    /// there is no data available and it's possible for more data to be sent.
     pub fn next(&self) -> AppResult<Event> {
         Ok(self.receiver.recv()?)
+    }
+
+    pub fn resume(&self) {
+        self.running.store(true, Ordering::Relaxed);
+        self.handler.thread().unpark();
+    }
+
+    pub fn pause(&self) {
+        self.running.store(false, Ordering::Relaxed);
     }
 }
