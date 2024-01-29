@@ -1,4 +1,4 @@
-BINARY_NAME = lazygrep
+BINARY_NAME = lens
 TARGET = target/release/$(BINARY_NAME)
 INSTALL_LOCATION = /usr/local/bin/$(BINARY_NAME)
 IMAGES_LOCATION = ~/.$(BINARY_NAME)

@@ -1,7 +1,7 @@
-use lazygrep::app::{App, AppResult};
-use lazygrep::event::{Event, EventHandler};
-use lazygrep::handler::handle_key_events;
-use lazygrep::tui::Tui;
+use lens::app::{App, AppResult};
+use lens::event::{Event, EventHandler};
+use lens::handler::handle_key_events;
+use lens::tui::Tui;
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 use std::io;

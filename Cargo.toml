@@ -1,9 +1,13 @@
 [package]
-name = "lazygrep"
+name = "lens"
 version = "0.1.0"
-authors = ["lobotomizedDev <oskar.rochowiak@tutanota.com>"]
+authors = ["unixpariah"]
 license = "MIT"
 edition = "2021"
+description = "Command line fuzzy finder"
+repository = "https://github.com/unixpariah/lens"
+keywords = ["terminal", "cli"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 anyhow = "1.0.79"

@@ -1,6 +1,5 @@
 mod helpers;
 
-use std::io;
 use crate::{
     app::{App, AppResult, Mode, Window},
     tui::Tui,
@@ -8,6 +7,7 @@ use crate::{
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use helpers::{get_preview, get_results, open_editor};
 use ratatui::backend::CrosstermBackend;
+use std::io;
 
 pub fn handle_key_events(
     key_event: KeyEvent,
@@ -52,19 +52,19 @@ pub fn handle_key_events(
         (KeyCode::Char('e'), Mode::Normal, Window::Search) => {
             open_editor(app, tui)?;
         }
-        (KeyCode::Char('j'), Mode::Normal, Window::Options) => {
+        (KeyCode::Char('j') | KeyCode::Down, Mode::Normal, Window::Options) => {
             //app.scroll.options += 1;
         }
-        (KeyCode::Char('k'), Mode::Normal, Window::Options) => {
+        (KeyCode::Char('k') | KeyCode::Up, Mode::Normal, Window::Options) => {
             //app.scroll.options -= 1;
         }
-        (KeyCode::Char('k'), Mode::Normal, Window::Search) => {
+        (KeyCode::Char('k') | KeyCode::Up, Mode::Normal, Window::Search) => {
             if app.scroll.result == 0 {
                 app.scroll.result = app.result.len();
             }
             app.scroll.result -= 1;
         }
-        (KeyCode::Char('j'), Mode::Normal, Window::Search) => {
+        (KeyCode::Char('j') | KeyCode::Down, Mode::Normal, Window::Search) => {
             app.scroll.result += 1;
             if app.scroll.result == app.result.len() {
                 app.scroll.result = 0;
