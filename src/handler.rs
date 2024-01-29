@@ -2,7 +2,7 @@ mod helpers;
 
 use crate::app::{App, AppResult, Mode, Window};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use helpers::{get_preview, get_results, open_editor, scroll};
+use helpers::{get_preview, get_results, open_editor};
 
 pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
     match (key_event.code, &app.mode, &app.window) {
@@ -17,7 +17,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             }
             app.query.insert(app.cursor_pos, c);
             app.cursor_pos += 1;
-            app.result_scroll = 0;
+            app.scroll.result = 0;
             get_results(app)?;
         }
         (KeyCode::Backspace, Mode::Insert, Window::Search) => {
@@ -35,25 +35,31 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             }
         }
         (KeyCode::Char('g'), Mode::Normal, Window::Search) => {
-            app.result_scroll = 0;
+            app.scroll.result = 0;
         }
         (KeyCode::Char('G'), Mode::Normal, Window::Search) => {
-            app.result_scroll = app.result.len() - 1;
+            app.scroll.result = app.result.len() - 1;
         }
         (KeyCode::Char('e'), Mode::Normal, Window::Search) => {
             open_editor(app)?;
         }
         (KeyCode::Char('j'), Mode::Normal, Window::Options) => {
-            scroll(&mut app.options_scroll, 1, 4)
+            //app.scroll.options += 1;
         }
         (KeyCode::Char('k'), Mode::Normal, Window::Options) => {
-            scroll(&mut app.options_scroll, -1, 4)
+            //app.scroll.options -= 1;
         }
         (KeyCode::Char('k'), Mode::Normal, Window::Search) => {
-            scroll(&mut app.result_scroll, -1, app.result.len())
+            if app.scroll.result == 0 {
+                app.scroll.result = app.result.len();
+            }
+            app.scroll.result -= 1;
         }
         (KeyCode::Char('j'), Mode::Normal, Window::Search) => {
-            scroll(&mut app.result_scroll, 1, app.result.len())
+            app.scroll.result += 1;
+            if app.scroll.result == app.result.len() {
+                app.scroll.result = 0;
+            }
         }
         (KeyCode::Char('D'), Mode::Normal, Window::Search) => {
             if app.query.len() > 0 {

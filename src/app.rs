@@ -15,17 +15,31 @@ pub enum Window {
 }
 
 #[derive(Debug)]
+pub struct Scroll {
+    pub result: usize,
+    pub options: usize,
+}
+
+impl Default for Scroll {
+    fn default() -> Self {
+        Self {
+            result: 0,
+            options: 0,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct App {
     pub running: bool,
     pub window: Window,
     pub mode: Mode,
+    pub scroll: Scroll,
     pub query: Vec<char>,
     pub cursor_pos: usize,
     pub result: Vec<String>,
-    pub preview: String,
-    pub result_scroll: usize,
-    pub options_scroll: usize,
     pub args: Vec<String>,
+    pub preview: String,
     pub searched_line: usize,
 }
 
@@ -39,10 +53,9 @@ impl Default for App {
             cursor_pos: 0,
             result: Vec::new(),
             preview: String::new(),
-            result_scroll: 0,
-            options_scroll: 0,
             args: Vec::new(),
             searched_line: 0,
+            scroll: Scroll::default(),
         }
     }
 }

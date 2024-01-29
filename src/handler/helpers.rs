@@ -6,13 +6,6 @@ use std::{
     path::Path,
 };
 
-pub fn scroll(scroll: &mut usize, direction: i32, limit: usize) {
-    let new_scroll = (*scroll as i32) + direction;
-    if new_scroll >= 0 && new_scroll < limit as i32 {
-        *scroll = new_scroll as usize;
-    }
-}
-
 pub fn open_editor(app: &mut App) -> anyhow::Result<()> {
     let editor = match env::var("EDITOR") {
         Ok(editor) => editor,
@@ -20,7 +13,7 @@ pub fn open_editor(app: &mut App) -> anyhow::Result<()> {
     };
     let result = app
         .result
-        .get(app.result_scroll)
+        .get(app.scroll.result)
         .unwrap()
         .split(":")
         .collect::<Vec<&str>>();
@@ -33,14 +26,7 @@ pub fn open_editor(app: &mut App) -> anyhow::Result<()> {
     };
     Command::new(editor)
         .arg(command)
-        .arg(
-            &app.result
-                .get(app.result_scroll)
-                .unwrap()
-                .split_once(":")
-                .unwrap()
-                .0,
-        )
+        .arg(result[0])
         .spawn()?
         .wait()?;
 
@@ -74,29 +60,25 @@ pub fn get_results(app: &mut App) -> anyhow::Result<()> {
 }
 
 pub fn get_preview(app: &mut App) -> anyhow::Result<()> {
-    let file = File::open(Path::new(
-        &app.result
-            .get(app.result_scroll)
-            .unwrap_or(&":".to_string())
-            .split_once(":")
-            .unwrap()
-            .0,
-    ));
+    if app.result.len() == 0 {
+        return Ok(());
+    }
+    let result = app
+        .result
+        .get(app.scroll.result)
+        .unwrap()
+        .split(":")
+        .collect::<Vec<&str>>();
+    let file = File::open(Path::new(result[0]));
 
     if let Ok(file) = file {
         let reader = io::BufReader::new(file);
 
-        let x = &app
-            .result
-            .get(app.result_scroll)
-            .unwrap_or(&":".to_string())
-            .split(":")
-            .collect::<Vec<&str>>()[1]
-            .parse::<usize>()?;
+        let x = result[1].parse::<usize>()?;
 
-        let start = if *x > 25_usize { *x - 25 } else { 0 };
+        let start = if x > 25_usize { x - 25 } else { 0 };
         let end = start + 50;
-        app.searched_line = *x - start;
+        app.searched_line = x - start;
 
         app.preview = reader
             .lines()

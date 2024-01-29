@@ -34,10 +34,10 @@ impl Colors {
 pub fn render(app: &mut App, frame: &mut Frame) {
     let colors = Colors::new(&app.window);
     let mut result_state = ListState::default();
-    result_state.select(Some(app.result_scroll));
+    result_state.select(Some(app.scroll.result));
 
     let mut options_state = ListState::default();
-    options_state.select(Some(app.options_scroll));
+    options_state.select(Some(app.scroll.options));
 
     let columns = Layout::default()
         .direction(Direction::Horizontal)
