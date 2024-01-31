@@ -146,8 +146,8 @@ pub fn mode(app: &mut App) -> Paragraph<'static> {
         return Paragraph::new("");
     }
     let mode = match app.mode {
-        Mode::Normal => "Normal",
-        Mode::Insert => "Insert",
+        Mode::Normal => "NORMAL",
+        Mode::Insert => "INSERT",
     };
 
     Paragraph::new(mode).block(Block::default().padding(Padding::new(1, 0, 0, 0)))

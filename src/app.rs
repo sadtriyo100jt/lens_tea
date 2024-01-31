@@ -35,6 +35,10 @@ impl Default for Scroll {
 pub struct Search {
     pub cursor: usize,
     pub query: Vec<char>,
+    pub mode: Mode,
+    pub result: Vec<String>,
+    pub preview: String,
+    pub line: usize,
 }
 
 impl Default for Search {
@@ -42,6 +46,10 @@ impl Default for Search {
         Self {
             cursor: 0,
             query: Vec::new(),
+            mode: Mode::Normal,
+            result: Vec::new(),
+            preview: String::new(),
+            line: 0,
         }
     }
 }
@@ -64,17 +72,12 @@ impl Default for Command {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct App {
     pub options: Vec<String>,
-    pub running: bool,
-    pub cursor_pos: usize,
-    pub searched_line: usize,
-    pub preview: String,
     pub vi_command: String,
-    pub mode: Mode,
+    pub running: bool,
     pub window: Window,
-    pub result: Vec<String>,
-    pub query: Vec<char>,
     pub scroll: Scroll,
     pub command: Command,
+    pub search: Search,
 }
 
 impl Default for App {
@@ -86,16 +89,11 @@ impl Default for App {
         Self {
             options,
             running: true,
-            cursor_pos: 0,
-            searched_line: 0,
-            preview: String::new(),
             vi_command: String::new(),
-            mode: Mode::Normal,
             window: Window::Search,
-            result: Vec::new(),
-            query: Vec::new(),
             scroll: Scroll::default(),
             command: Command::default(),
+            search: Search::default(),
         }
     }
 }
@@ -121,6 +119,13 @@ impl App {
         let _ = fs::create_dir(&config);
         fs::write(config.join("session.json"), serde_json::to_string(&self)?)?;
 
+        Ok(())
+    }
+
+    pub fn delete_session(&self) -> anyhow::Result<()> {
+        let home = env::var("HOME")?;
+        let config = PathBuf::from(format!("{}/.config/lens", home));
+        let _ = fs::remove_file(config.join("session.json"));
         Ok(())
     }
 }

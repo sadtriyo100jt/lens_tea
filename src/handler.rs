@@ -14,64 +14,66 @@ pub fn handle_key_events(
     app: &mut App,
     tui: &mut Tui<CrosstermBackend<io::Stderr>>,
 ) -> AppResult<()> {
-    match (key_event.code, &app.mode, &app.window) {
+    match (key_event.code, &app.search.mode, &app.window) {
         // Search
         (KeyCode::Char(c), Mode::Insert, Window::Search) => {
-            if app.cursor_pos > app.query.len() {
-                app.cursor_pos = app.query.len();
+            if app.search.cursor > app.search.query.len() {
+                app.search.cursor = app.search.query.len();
             }
-            app.query.insert(app.cursor_pos, c);
-            app.cursor_pos += 1;
+            app.search.query.insert(app.search.cursor, c);
+            app.search.cursor += 1;
             app.scroll.result = 0;
             get_results(app)?;
         }
         (KeyCode::Backspace, Mode::Insert, Window::Search) => {
-            if app.cursor_pos > 0 {
-                app.query.remove(app.cursor_pos - 1);
-                app.cursor_pos -= 1;
+            if app.search.cursor > 0 {
+                app.search.query.remove(app.search.cursor - 1);
+                app.search.cursor -= 1;
             }
 
             get_results(app)?;
         }
         (KeyCode::Esc, Mode::Insert, Window::Search) => {
-            app.mode = Mode::Normal;
-            if app.cursor_pos > 0 {
-                app.cursor_pos -= 1
+            app.search.mode = Mode::Normal;
+            if app.search.cursor > 0 {
+                app.search.cursor -= 1
             }
         }
         (KeyCode::Char('G'), Mode::Normal, Window::Search) => {
-            app.scroll.result = app.result.len() - 1;
+            app.scroll.result = app.search.result.len() - 1;
         }
         (KeyCode::Enter, _, Window::Search) => {
-            if app.result.len() > 0 {
+            if app.search.result.len() > 0 {
                 open_editor(app, tui)?;
             }
         }
         (KeyCode::Char('k') | KeyCode::Up, _, Window::Search) => {
             if app.scroll.result == 0 {
-                app.scroll.result = app.result.len();
+                app.scroll.result = app.search.result.len();
             }
             app.scroll.result -= 1;
         }
         (KeyCode::Char('j') | KeyCode::Down, _, Window::Search) => {
             app.scroll.result += 1;
-            if app.scroll.result == app.result.len() {
+            if app.scroll.result == app.search.result.len() {
                 app.scroll.result = 0;
             }
         }
         (KeyCode::Char('D'), Mode::Normal, Window::Search) => {
-            if app.query.len() > 0 {
-                app.query.drain(app.cursor_pos..app.query.len());
-                app.cursor_pos -= 1;
+            if app.search.query.len() > 0 {
+                app.search
+                    .query
+                    .drain(app.search.cursor..app.search.query.len());
+                app.search.cursor -= 1;
             }
         }
         (KeyCode::Char('I'), Mode::Normal, Window::Search) => {
-            app.cursor_pos = 0;
-            app.mode = Mode::Insert
+            app.search.cursor = 0;
+            app.search.mode = Mode::Insert
         }
         (KeyCode::Char('A'), Mode::Normal, Window::Search) => {
-            app.cursor_pos = app.query.len();
-            app.mode = Mode::Insert;
+            app.search.cursor = app.search.query.len();
+            app.search.mode = Mode::Insert;
         }
         (KeyCode::Char('o') | KeyCode::Char('O'), Mode::Normal, Window::Search) => {
             app.window = Window::Options
@@ -80,20 +82,20 @@ pub fn handle_key_events(
             app.window = Window::Search
         }
         (KeyCode::Char('h'), Mode::Normal, Window::Search) => {
-            if app.cursor_pos > 0 {
-                app.cursor_pos -= 1;
+            if app.search.cursor > 0 {
+                app.search.cursor -= 1;
             }
         }
         (KeyCode::Char('l'), Mode::Normal, Window::Search) => {
-            if app.cursor_pos < app.query.len() - 1 {
-                app.cursor_pos += 1;
+            if app.search.cursor < app.search.query.len() - 1 {
+                app.search.cursor += 1;
             }
         }
         (KeyCode::Char('i'), Mode::Normal, Window::Search) => {
-            app.mode = Mode::Insert;
+            app.search.mode = Mode::Insert;
         }
         (KeyCode::Char('a'), Mode::Normal, Window::Search) => {
-            app.mode = Mode::Insert;
+            app.search.mode = Mode::Insert;
             if app.cursor_pos < app.query.len() {
                 app.cursor_pos += 1;
             }
@@ -119,10 +121,12 @@ pub fn handle_key_events(
             app.command.cursor += 1;
         }
         (KeyCode::Backspace, _, Window::Command) => {
-            if app.command.query.len() > 1 {
-                app.command.query.pop();
-                app.command.cursor -= 1;
+            if app.command.query.len() <= 1 {
+                app.window = Window::Search;
             }
+
+            app.command.query.pop();
+            app.command.cursor -= 1;
         }
         (KeyCode::Enter, _, Window::Command) => {
             app.window = Window::Search;
@@ -139,6 +143,10 @@ pub fn handle_key_events(
                     app.command.query.clear();
                     app.save()?;
                     app.quit()
+                }
+                ":q!" => {
+                    app.delete_session()?;
+                    app.quit();
                 }
                 _ => {}
             }
