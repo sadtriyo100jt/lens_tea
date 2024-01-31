@@ -165,10 +165,11 @@ pub fn handle_key_events(
             app.command.query.push(':');
             app.command.cursor += 1;
         }
-        (KeyCode::Char(c), _, _) if app.window != Window::Command => {
+        (KeyCode::Char(c), _, _) => {
             app.vi_command.push_str(&c.to_string());
             check_commands(app)?;
         }
+        (KeyCode::Esc, _, _) => app.vi_command = String::new(),
         _ => {}
     }
 
