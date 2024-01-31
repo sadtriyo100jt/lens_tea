@@ -1,6 +1,6 @@
 use ratatui::backend::CrosstermBackend;
 
-use crate::app::App;
+use crate::app::{App, Window};
 use crate::tui::Tui;
 use std::{env, process::Command};
 use std::{
@@ -52,7 +52,6 @@ pub fn get_results(app: &mut App) -> anyhow::Result<()> {
                 .arg("--line-number")
                 .arg("--column")
                 .arg("--smart-case")
-                .arg("--hidden")
                 .arg(app.query.iter().collect::<String>())
                 .output()?
                 .stdout,
@@ -70,6 +69,7 @@ pub fn get_results(app: &mut App) -> anyhow::Result<()> {
 
 pub fn get_preview(app: &mut App) -> anyhow::Result<()> {
     if app.result.len() == 0 {
+        app.preview = String::new();
         return Ok(());
     }
     let result = app
@@ -100,6 +100,25 @@ pub fn get_preview(app: &mut App) -> anyhow::Result<()> {
         return Ok(());
     }
 
-    app.preview = String::new();
+    Ok(())
+}
+
+pub fn check_commands(app: &mut App) -> anyhow::Result<()> {
+    match app.vi_command.as_ref() {
+        "gg" => {
+            if app.window == Window::Search {
+                app.scroll.result = 0;
+            } else {
+                app.scroll.options = 0;
+            }
+        }
+        "dd" => {
+            app.query.clear();
+            get_results(app)?;
+        }
+        _ => return Ok(()),
+    };
+
+    app.vi_command.clear();
     Ok(())
 }

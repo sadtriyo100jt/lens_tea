@@ -1,4 +1,4 @@
-use crate::app::App;
+use crate::app::{App, Mode};
 use ratatui::{
     layout::Alignment,
     style::{Color, Modifier, Style, Stylize},
@@ -46,24 +46,28 @@ pub fn search(color: Color) -> Paragraph<'static> {
         .alignment(Alignment::Left)
 }
 
-pub fn options(color: Color) -> List<'static> {
+pub fn options<'a>(color: Color, app: &'a mut App) -> List<'a> {
     let title = vec![
         Span::styled("O", Style::default().fg(Color::Red)),
         Span::raw("ptions"),
     ];
 
-    List::new(["hidden files"])
-        .block(
-            Block::default()
-                .title(title)
-                .title_alignment(Alignment::Center)
-                .borders(Borders::ALL)
-                .border_type(BorderType::Rounded)
-                .padding(Padding::new(1, 0, 0, 0)),
-        )
-        .style(Style::default().fg(color).bg(Color::Black))
-        .highlight_style(Style::default().add_modifier(Modifier::BOLD))
-        .highlight_symbol("> ")
+    List::new(
+        app.options
+            .iter()
+            .map(|item| ListItem::new(Span::from(item))),
+    )
+    .block(
+        Block::default()
+            .title(title)
+            .title_alignment(Alignment::Center)
+            .borders(Borders::ALL)
+            .border_type(BorderType::Rounded)
+            .padding(Padding::new(1, 0, 0, 0)),
+    )
+    .style(Style::default().fg(color).bg(Color::Black))
+    .highlight_style(Style::default().add_modifier(Modifier::BOLD))
+    .highlight_symbol("> ")
 }
 
 pub fn results<'a>(app: &'a mut App) -> List<'a> {
@@ -107,4 +111,31 @@ pub fn preview<'a>(app: &'a mut App) -> List<'a> {
             .border_type(BorderType::Rounded),
     )
     .style(Style::default().fg(Color::Cyan).bg(Color::Black))
+}
+
+pub fn vi_bar(app: &mut App) -> TextArea {
+    let mut text_area = TextArea::default();
+    text_area.set_cursor_line_style(Style::default());
+    text_area.set_style(Style::default().fg(Color::LightRed));
+    text_area.set_block(Block::default().borders(Borders::BOTTOM));
+    text_area.insert_str(app.command.query.iter().collect::<String>());
+    text_area.move_cursor(CursorMove::Jump(0, app.command.cursor as u16));
+    text_area.set_cursor_style(
+        Style::default()
+            .fg(Color::LightBlue)
+            .add_modifier(Modifier::REVERSED),
+    );
+
+    text_area
+}
+
+pub fn mode(app: &mut App) -> Paragraph<'static> {
+    let mode = match app.mode {
+        Mode::Normal => "Normal",
+        Mode::Insert => "Insert",
+    };
+
+    Paragraph::new(mode)
+        .block(Block::default().padding(Padding::new(0, 1, 0, 0)))
+        .alignment(Alignment::Right)
 }

@@ -4,13 +4,15 @@ version = "0.1.0"
 authors = ["unixpariah"]
 license = "MIT"
 edition = "2021"
-description = "Command line fuzzy finder"
+description = "Cross-platform vim-like command line fuzzy finder."
 repository = "https://github.com/unixpariah/lens"
-keywords = ["terminal", "cli"]
+keywords = ["terminal", "cli", "tui"]
 categories = ["command-line-utilities"]
 
 [dependencies]
 anyhow = "1.0.79"
 crossterm = "0.27.0"
 ratatui = "0.25.0"
+serde = { version = "1.0.196", features = ["derive"] }
+serde_json = "1.0.113"
 tui-textarea = "0.4.0"

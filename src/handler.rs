@@ -4,8 +4,8 @@ use crate::{
     app::{App, AppResult, Mode, Window},
     tui::Tui,
 };
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use helpers::{get_preview, get_results, open_editor};
+use crossterm::event::{KeyCode, KeyEvent};
+use helpers::{check_commands, get_preview, get_results, open_editor};
 use ratatui::backend::CrosstermBackend;
 use std::io;
 
@@ -15,11 +15,7 @@ pub fn handle_key_events(
     tui: &mut Tui<CrosstermBackend<io::Stderr>>,
 ) -> AppResult<()> {
     match (key_event.code, &app.mode, &app.window) {
-        (KeyCode::Char('c') | KeyCode::Char('C'), _, _)
-            if key_event.modifiers == KeyModifiers::CONTROL =>
-        {
-            app.quit();
-        }
+        // Search
         (KeyCode::Char(c), Mode::Insert, Window::Search) => {
             if app.cursor_pos > app.query.len() {
                 app.cursor_pos = app.query.len();
@@ -43,28 +39,21 @@ pub fn handle_key_events(
                 app.cursor_pos -= 1
             }
         }
-        (KeyCode::Char('g'), Mode::Normal, Window::Search) => {
-            app.scroll.result = 0;
-        }
         (KeyCode::Char('G'), Mode::Normal, Window::Search) => {
             app.scroll.result = app.result.len() - 1;
         }
-        (KeyCode::Char('e'), Mode::Normal, Window::Search) => {
-            open_editor(app, tui)?;
+        (KeyCode::Enter, _, Window::Search) => {
+            if app.result.len() > 0 {
+                open_editor(app, tui)?;
+            }
         }
-        (KeyCode::Char('j') | KeyCode::Down, Mode::Normal, Window::Options) => {
-            //app.scroll.options += 1;
-        }
-        (KeyCode::Char('k') | KeyCode::Up, Mode::Normal, Window::Options) => {
-            //app.scroll.options -= 1;
-        }
-        (KeyCode::Char('k') | KeyCode::Up, Mode::Normal, Window::Search) => {
+        (KeyCode::Char('k') | KeyCode::Up, _, Window::Search) => {
             if app.scroll.result == 0 {
                 app.scroll.result = app.result.len();
             }
             app.scroll.result -= 1;
         }
-        (KeyCode::Char('j') | KeyCode::Down, Mode::Normal, Window::Search) => {
+        (KeyCode::Char('j') | KeyCode::Down, _, Window::Search) => {
             app.scroll.result += 1;
             if app.scroll.result == app.result.len() {
                 app.scroll.result = 0;
@@ -83,16 +72,6 @@ pub fn handle_key_events(
         (KeyCode::Char('A'), Mode::Normal, Window::Search) => {
             app.cursor_pos = app.query.len();
             app.mode = Mode::Insert;
-        }
-        (KeyCode::Char('x'), Mode::Normal, Window::Search) => {
-            if app.cursor_pos <= app.query.len() && app.query.len() > 0 {
-                app.query.remove(app.cursor_pos);
-            }
-
-            if app.cursor_pos > 0 {
-                app.cursor_pos -= 1;
-            }
-            get_results(app)?;
         }
         (KeyCode::Char('o') | KeyCode::Char('O'), Mode::Normal, Window::Search) => {
             app.window = Window::Options
@@ -119,7 +98,77 @@ pub fn handle_key_events(
                 app.cursor_pos += 1;
             }
         }
-        (KeyCode::Char('q'), Mode::Normal, _) => app.quit(),
+        (KeyCode::Char('x'), Mode::Normal, Window::Search) => {
+            if app.cursor_pos <= app.query.len() && app.query.len() > 0 {
+                app.query.remove(app.cursor_pos);
+            }
+
+            if app.cursor_pos >= app.query.len() {
+                app.cursor_pos -= 1;
+            }
+            get_results(app)?;
+        }
+
+        // Command
+        (KeyCode::Esc, _, Window::Command) => {
+            app.command.query.clear();
+            app.window = Window::Search;
+        }
+        (KeyCode::Char(c), _, Window::Command) => {
+            app.command.query.push(c);
+            app.command.cursor += 1;
+        }
+        (KeyCode::Backspace, _, Window::Command) => {
+            if app.command.query.len() > 1 {
+                app.command.query.pop();
+                app.command.cursor -= 1;
+            }
+        }
+        (KeyCode::Enter, _, Window::Command) => {
+            app.window = Window::Search;
+            match app.command.query.iter().collect::<String>().as_ref() {
+                ":q" => {
+                    app.command.query.clear();
+                    app.quit();
+                }
+                ":w" => {
+                    app.command.query.clear();
+                    app.save()?;
+                }
+                ":wq" => {
+                    app.command.query.clear();
+                    app.save()?;
+                    app.quit()
+                }
+                _ => {}
+            }
+        }
+
+        // Options
+        (KeyCode::Char('j') | KeyCode::Down, Mode::Normal, Window::Options) => {
+            app.scroll.options += 1;
+            if app.scroll.options == app.options.len() {
+                app.scroll.options = 0
+            }
+        }
+        (KeyCode::Char('k') | KeyCode::Up, Mode::Normal, Window::Options) => {
+            if app.scroll.options == 0 {
+                app.scroll.options = app.options.len();
+            }
+            app.scroll.options -= 1;
+        }
+
+        // General
+        (KeyCode::Char(':'), Mode::Normal, _) => {
+            app.window = Window::Command;
+            app.command.query.clear();
+            app.command.query.push(':');
+            app.command.cursor += 1;
+        }
+        (KeyCode::Char(c), _, _) if app.window != Window::Command => {
+            app.vi_command.push_str(&c.to_string());
+            check_commands(app)?;
+        }
         _ => {}
     }
 
