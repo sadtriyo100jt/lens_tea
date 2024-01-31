@@ -1,4 +1,4 @@
-use crate::app::{App, Mode};
+use crate::app::{App, Mode, Window};
 use ratatui::{
     layout::Alignment,
     style::{Color, Modifier, Style, Stylize},
@@ -85,7 +85,7 @@ pub fn results<'a>(app: &'a mut App) -> List<'a> {
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded),
         )
-        .style(Style::default().fg(Color::Cyan).bg(Color::Black))
+        .style(Style::default().fg(Color::Blue).bg(Color::Black))
         .highlight_style(
             Style::default()
                 .add_modifier(Modifier::BOLD)
@@ -110,14 +110,18 @@ pub fn preview<'a>(app: &'a mut App) -> List<'a> {
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded),
     )
-    .style(Style::default().fg(Color::Cyan).bg(Color::Black))
+    .style(Style::default().fg(Color::Blue).bg(Color::Black))
 }
 
-pub fn vi_bar(app: &mut App) -> TextArea {
+pub fn vi_bar(app: &mut App, color: Color) -> TextArea {
     let mut text_area = TextArea::default();
     text_area.set_cursor_line_style(Style::default());
-    text_area.set_style(Style::default().fg(Color::LightRed));
-    text_area.set_block(Block::default().borders(Borders::BOTTOM));
+    text_area.set_style(Style::default().fg(Color::White));
+    text_area.set_block(
+        Block::default()
+            .borders(Borders::BOTTOM)
+            .style(Style::default().fg(color)),
+    );
     text_area.insert_str(app.command.query.iter().collect::<String>());
     text_area.move_cursor(CursorMove::Jump(0, app.command.cursor as u16));
     text_area.set_cursor_style(
@@ -126,16 +130,31 @@ pub fn vi_bar(app: &mut App) -> TextArea {
             .add_modifier(Modifier::REVERSED),
     );
 
+    if app.window != Window::Command {
+        text_area.set_cursor_style(
+            Style::default()
+                .fg(Color::LightBlue)
+                .add_modifier(Modifier::HIDDEN),
+        );
+    }
+
     text_area
 }
 
 pub fn mode(app: &mut App) -> Paragraph<'static> {
+    if app.window != Window::Search {
+        return Paragraph::new("");
+    }
     let mode = match app.mode {
         Mode::Normal => "Normal",
         Mode::Insert => "Insert",
     };
 
-    Paragraph::new(mode)
-        .block(Block::default().padding(Padding::new(0, 1, 0, 0)))
+    Paragraph::new(mode).block(Block::default().padding(Padding::new(1, 0, 0, 0)))
+}
+
+pub fn current_command(app: &mut App) -> Paragraph<'static> {
+    Paragraph::new(app.vi_command.clone())
+        .block(Block::default().padding(Padding::new(0, 10, 0, 0)))
         .alignment(Alignment::Right)
 }

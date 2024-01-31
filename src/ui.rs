@@ -9,25 +9,31 @@ use ratatui::{
     Frame,
 };
 
-use self::components::{mode, vi_bar};
+use self::components::{current_command, mode, vi_bar};
 
 struct Colors {
     search: Color,
     options: Color,
+    command: Color,
 }
 
 impl Colors {
     fn new(chosen_window: &Window) -> Self {
         Self {
             search: if chosen_window == &Window::Search {
-                Color::Blue
+                Color::LightBlue
             } else {
-                Color::Cyan
+                Color::Blue
             },
             options: if chosen_window == &Window::Options {
-                Color::Blue
+                Color::LightBlue
             } else {
-                Color::Cyan
+                Color::Blue
+            },
+            command: if chosen_window == &Window::Command {
+                Color::LightBlue
+            } else {
+                Color::Blue
             },
         }
     }
@@ -71,6 +77,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     frame.render_widget(text_area(app).widget(), rows[0]);
     frame.render_widget(search(colors.search), rows[0]);
     frame.render_widget(preview(app), columns[2]);
-    frame.render_widget(vi_bar(app).widget(), areas[1]);
+    frame.render_widget(vi_bar(app, colors.command).widget(), areas[1]);
     frame.render_widget(mode(app), areas[1]);
+    frame.render_widget(current_command(app), areas[1]);
 }
