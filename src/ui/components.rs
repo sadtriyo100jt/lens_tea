@@ -16,8 +16,8 @@ pub fn text_area(app: &mut App) -> TextArea {
             .borders(Borders::ALL)
             .padding(Padding::new(3, 0, 0, 0)),
     );
-    text_area.insert_str(app.query.iter().collect::<String>());
-    text_area.move_cursor(CursorMove::Jump(0, app.cursor_pos as u16));
+    text_area.insert_str(app.search.query.iter().collect::<String>());
+    text_area.move_cursor(CursorMove::Jump(0, app.search.cursor as u16));
     text_area.set_cursor_style(
         Style::default()
             .fg(Color::LightBlue)
@@ -28,15 +28,10 @@ pub fn text_area(app: &mut App) -> TextArea {
 }
 
 pub fn search(color: Color) -> Paragraph<'static> {
-    let title = vec![
-        Span::styled("S", Style::default().fg(Color::Red)),
-        Span::raw("earch"),
-    ];
-
     Paragraph::new(Span::styled(">", Style::default().fg(Color::Magenta)))
         .block(
             Block::default()
-                .title(title)
+                .title(Span::raw(" Search "))
                 .title_alignment(Alignment::Center)
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded)
@@ -46,32 +41,9 @@ pub fn search(color: Color) -> Paragraph<'static> {
         .alignment(Alignment::Left)
 }
 
-pub fn options<'a>(color: Color, app: &'a mut App) -> List<'a> {
-    let title = vec![
-        Span::styled("O", Style::default().fg(Color::Red)),
-        Span::raw("ptions"),
-    ];
-
-    List::new(
-        app.options
-            .iter()
-            .map(|item| ListItem::new(Span::from(item))),
-    )
-    .block(
-        Block::default()
-            .title(title)
-            .title_alignment(Alignment::Center)
-            .borders(Borders::ALL)
-            .border_type(BorderType::Rounded)
-            .padding(Padding::new(1, 0, 0, 0)),
-    )
-    .style(Style::default().fg(color).bg(Color::Black))
-    .highlight_style(Style::default().add_modifier(Modifier::BOLD))
-    .highlight_symbol("> ")
-}
-
 pub fn results<'a>(app: &'a mut App) -> List<'a> {
     let items = app
+        .search
         .result
         .iter()
         .map(|item| ListItem::new(Span::from(item)).style(Style::default().fg(Color::White)))
@@ -80,7 +52,7 @@ pub fn results<'a>(app: &'a mut App) -> List<'a> {
     List::new(items)
         .block(
             Block::default()
-                .title("Results")
+                .title(" Results ")
                 .title_alignment(Alignment::Center)
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded),
@@ -95,9 +67,9 @@ pub fn results<'a>(app: &'a mut App) -> List<'a> {
 }
 
 pub fn preview<'a>(app: &'a mut App) -> List<'a> {
-    List::new(app.preview.lines().enumerate().map(|(index, line)| {
+    List::new(app.search.preview.lines().enumerate().map(|(index, line)| {
         let item = ListItem::new(Span::from(line).style(Style::default().fg(Color::White)));
-        if index + 1 == app.searched_line {
+        if index + 1 == app.search.line {
             return item.add_modifier(Modifier::REVERSED);
         }
 
@@ -105,7 +77,7 @@ pub fn preview<'a>(app: &'a mut App) -> List<'a> {
     }))
     .block(
         Block::default()
-            .title("Preview")
+            .title(" Preview ")
             .title_alignment(Alignment::Center)
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded),
@@ -145,7 +117,7 @@ pub fn mode(app: &mut App) -> Paragraph<'static> {
     if app.window != Window::Search {
         return Paragraph::new("");
     }
-    let mode = match app.mode {
+    let mode = match app.search.mode {
         Mode::Normal => "NORMAL",
         Mode::Insert => "INSERT",
     };

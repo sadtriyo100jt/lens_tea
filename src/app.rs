@@ -17,21 +17,6 @@ pub enum Window {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Scroll {
-    pub result: usize,
-    pub options: usize,
-}
-
-impl Default for Scroll {
-    fn default() -> Self {
-        Self {
-            result: 0,
-            options: 0,
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
 pub struct Search {
     pub cursor: usize,
     pub query: Vec<char>,
@@ -39,6 +24,7 @@ pub struct Search {
     pub result: Vec<String>,
     pub preview: String,
     pub line: usize,
+    pub scroll: usize,
 }
 
 impl Default for Search {
@@ -50,6 +36,7 @@ impl Default for Search {
             result: Vec::new(),
             preview: String::new(),
             line: 0,
+            scroll: 0,
         }
     }
 }
@@ -71,29 +58,23 @@ impl Default for Command {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct App {
-    pub options: Vec<String>,
     pub vi_command: String,
     pub running: bool,
     pub window: Window,
-    pub scroll: Scroll,
     pub command: Command,
     pub search: Search,
+    pub args: Vec<String>,
 }
 
 impl Default for App {
     fn default() -> Self {
-        let options = vec!["hidden files", "test"]
-            .iter()
-            .map(|s| s.to_string())
-            .collect();
         Self {
-            options,
             running: true,
             vi_command: String::new(),
             window: Window::Search,
-            scroll: Scroll::default(),
             command: Command::default(),
             search: Search::default(),
+            args: Vec::new(),
         }
     }
 }

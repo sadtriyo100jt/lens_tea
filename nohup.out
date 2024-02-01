@@ -1,0 +1,20 @@
+[179840:179875:0131/212440.829761:ERROR:shared_image_manager.cc(199)] SharedImageManager::ProduceSkia: Trying to Produce a Skia representation from a non-existent mailbox.
+[179840:179875:0131/212440.838243:ERROR:shared_image_manager.cc(199)] SharedImageManager::ProduceSkia: Trying to Produce a Skia representation from a non-existent mailbox.
+[179840:179875:0131/212440.845815:ERROR:shared_image_manager.cc(199)] SharedImageManager::ProduceSkia: Trying to Produce a Skia representation from a non-existent mailbox.
+[179840:179875:0131/212440.853853:ERROR:shared_image_manager.cc(199)] SharedImageManager::ProduceSkia: Trying to Produce a Skia representation from a non-existent mailbox.
+21:26:01 WARNING: Text '>' not found on page!
+21:26:06 WARNING: Text 'big' not found on page!
+21:26:07 WARNING: Text 'bigg' not found on page!
+21:26:07 WARNING: Text 'big' not found on page!
+21:26:38 WARNING: Text 'ineq' not found on page!
+21:26:38 WARNING: Text 'inequ' not found on page!
+21:26:39 WARNING: Text 'ineq' not found on page!
+Fontconfig error: Cannot load default config file: No such file: (null)
+21:38:13 WARNING: Text 'PS' not found on page!
+21:38:14 WARNING: Text 'PS1' not found on page!
+21:40:32 INFO: SIGINT/SIGTERM received, shutting down!
+21:40:32 INFO: Do the same again to forcefully quit.
+21:41:00 INFO: SIGINT/SIGTERM received, shutting down!
+21:41:00 INFO: Do the same again to forcefully quit.
+Fontconfig error: Cannot load default config file: No such file: (null)
+21:45:58 ERROR: Load error: ERR_INTERNET_DISCONNECTED

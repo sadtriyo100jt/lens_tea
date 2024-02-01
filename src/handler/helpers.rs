@@ -18,8 +18,9 @@ pub fn open_editor(
         Err(_) => return Ok(()),
     };
     let result = app
+        .search
         .result
-        .get(app.scroll.result)
+        .get(app.search.scroll)
         .unwrap()
         .split(":")
         .collect::<Vec<&str>>();
@@ -43,16 +44,17 @@ pub fn open_editor(
 }
 
 pub fn get_results(app: &mut App) -> anyhow::Result<()> {
-    if app.query.len() > 0 {
-        app.result = String::from_utf8_lossy(
+    if app.search.query.len() > 0 {
+        app.search.result = String::from_utf8_lossy(
             &Command::new("rg")
+                .args(&app.args)
                 .arg("--color=never")
                 .arg("--no-heading")
                 .arg("--with-filename")
                 .arg("--line-number")
                 .arg("--column")
                 .arg("--smart-case")
-                .arg(app.query.iter().collect::<String>())
+                .arg(app.search.query.iter().collect::<String>())
                 .output()?
                 .stdout,
         )
@@ -63,18 +65,19 @@ pub fn get_results(app: &mut App) -> anyhow::Result<()> {
         return Ok(());
     }
 
-    app.result = Vec::new();
+    app.search.result = Vec::new();
     Ok(())
 }
 
 pub fn get_preview(app: &mut App) -> anyhow::Result<()> {
-    if app.result.len() == 0 {
-        app.preview = String::new();
+    if app.search.result.len() == 0 {
+        app.search.preview = String::new();
         return Ok(());
     }
     let result = app
+        .search
         .result
-        .get(app.scroll.result)
+        .get(app.search.scroll)
         .unwrap()
         .split(":")
         .collect::<Vec<&str>>();
@@ -87,9 +90,9 @@ pub fn get_preview(app: &mut App) -> anyhow::Result<()> {
 
         let start = if x > 25_usize { x - 25 } else { 0 };
         let end = start + 50;
-        app.searched_line = x - start;
+        app.search.line = x - start;
 
-        app.preview = reader
+        app.search.preview = reader
             .lines()
             .enumerate()
             .skip(start)
@@ -103,22 +106,47 @@ pub fn get_preview(app: &mut App) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn check_commands(app: &mut App) -> anyhow::Result<()> {
+pub fn handle_vi_command(app: &mut App) -> anyhow::Result<()> {
     match app.vi_command.as_ref() {
         "gg" => {
             if app.window == Window::Search {
-                app.scroll.result = 0;
+                app.search.scroll = 0;
             } else {
-                app.scroll.options = 0;
+                app.search.scroll = 0;
             }
         }
         "dd" => {
-            app.query.clear();
+            app.search.query.clear();
             get_results(app)?;
         }
         _ => return Ok(()),
     };
 
     app.vi_command.clear();
+    Ok(())
+}
+
+pub fn handle_exit_commands(app: &mut App) -> anyhow::Result<()> {
+    match app.command.query.iter().collect::<String>().as_ref() {
+        ":q" => {
+            app.command.query.clear();
+            app.quit();
+        }
+        ":w" => {
+            app.command.query.clear();
+            app.save()?;
+        }
+        ":wq" => {
+            app.command.query.clear();
+            app.save()?;
+            app.quit()
+        }
+        ":q!" => {
+            app.delete_session()?;
+            app.quit();
+        }
+        _ => {}
+    }
+
     Ok(())
 }
